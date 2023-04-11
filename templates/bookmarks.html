@@ -1,0 +1,8 @@
+<!-- templates/bookmarks.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    {% for bookmark in bookmarks %}
+        <a href="{% url 'post_detail' bookmark.post.id %}">{{ bookmark.post.title }}</a>
+    {% endfor %}
+{% endblock content %}

@@ -1,11 +1,13 @@
 # blog/views.py
 import django.views.generic
-from django.views.generic import ListView, DetailView, FormView
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect
+from django.utils.decorators import method_decorator
+from django.views.generic import View, ListView, DetailView
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect,  get_object_or_404
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 
-from .models import Post
+from .models import Post, Bookmark
 
 
 class LoginView(django.views.generic.View):
@@ -34,3 +36,51 @@ class BlogListView(ListView):
 class BlogDetailView(DetailView):
     model = Post
     template_name = 'post_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            # If user is logged in, provide context for bookmarks
+            post = self.get_object()
+            is_bookmarked = Bookmark.objects.filter(user=self.request.user, post=post).exists()
+            context['is_bookmarked'] = is_bookmarked
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+class BookmarkListView(ListView):
+    model = Bookmark
+    template_name = 'bookmarks.html'
+    context_object_name = 'bookmarks'
+
+    def get_queryset(self):
+        return Bookmark.objects.filter(user=self.request.user)
+
+
+@method_decorator(login_required, name='dispatch')
+class BookmarkAddView(View):
+    @staticmethod
+    def get(request, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        bookmark, created = Bookmark.objects.get_or_create(user=request.user, post=post)
+        if created:
+            # Bookmark created successfully
+            # Redirect to the post detail page or a dedicated bookmark section
+            return redirect('post_detail', pk=post.pk)
+        else:
+            # Bookmark already exists
+            # Handle the appropriate error or display a message
+            pass
+
+
+@method_decorator(login_required, name='dispatch')
+class BookmarkRemoveView(View):
+    @staticmethod
+    def get(request, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        bookmark = Bookmark.objects.filter(user=request.user, post=post).first()
+        if bookmark:
+            bookmark.delete()
+
+        return redirect('post_detail', pk=post.id)
+

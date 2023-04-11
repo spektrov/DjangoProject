@@ -6,4 +6,9 @@
     <h2>{{ post.title }}</h2>
     <p>{{ post.body }}</p>
   </div>
+    {% if not is_bookmarked %}
+        <a href="{% url 'bookmark_add' post.id %}">Bookmark</a>
+    {% else %}
+        <a href="{% url 'bookmark_remove' post.id %}">Remove Bookmark</a>
+    {% endif %}
 {% endblock content %}
