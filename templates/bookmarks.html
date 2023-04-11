@@ -2,7 +2,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    {% for bookmark in bookmarks %}
-        <a href="{% url 'post_detail' bookmark.post.id %}">{{ bookmark.post.title }}</a>
-    {% endfor %}
+    <ol>
+        {% for bookmark in bookmarks %}
+            <li><a href="{% url 'post_detail' bookmark.post.id %}">{{ bookmark.post.title }}</a></li>
+        {% endfor %}
+    </ol>
 {% endblock content %}
